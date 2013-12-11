@@ -70,7 +70,7 @@ static PyObject *Py_longdouble2string(PyObject *self, PyObject *args) {
 	return NULL;
     }
 
-    // cast to long double  -- need to make sure this isn't truncating
+    // cast to long double
     PyArray_CastScalarToCtype(longdouble_obj, &_longdouble, PyArray_DescrFromType(NPY_LONGDOUBLE));
 
     // do the conversion
@@ -82,10 +82,100 @@ static PyObject *Py_longdouble2string(PyObject *self, PyObject *args) {
     return PyString_FromString(_string);
 }
 
+static PyObject *Py_doubledouble2longdouble(PyObject *self, PyObject *args) {
+    PyObject *doubledouble_obj = NULL;
+    double _double[2];
+    long double *_longdouble;
+    PyObject *longdouble_obj = NULL;
+    npy_intp dims[1];
+    Py_ssize_t i;
+
+    if (!PyArg_ParseTuple(args,
+			  (char*)"O",
+			  &doubledouble_obj)) {
+	fprintf(stderr,"Failed to parse doubledouble tuple.\n");
+	return NULL;
+    }
+
+    // Raise an exception if it isn't a tuple with 2 guys
+    if (!PyTuple_Check(doubledouble_obj)) {
+	PyErr_SetString(LongDoubleError,"Input to doubledouble2longdouble must be a tuple.");
+	return NULL;
+    }
+
+    if (PyTuple_Size(doubledouble_obj) != 2) {
+	PyErr_SetString(LongDoubleError,"Input to doubledouble2longdouble must be a tuple with 2 objects.");
+	return NULL;
+    }
+
+    for (i=0;i<2;i++) {
+	_double[i] = PyFloat_AsDouble(PyTuple_GetItem(doubledouble_obj,i));
+    }
+
+    // make the output object -- 0 length array
+    dims[0] = 1;
+    longdouble_obj = PyArray_ZEROS(0,dims,NPY_LONGDOUBLE,0);
+
+    // get a pointer to the data...
+    _longdouble = (long double *) PyArray_DATA(longdouble_obj);
+
+    // Do the conversion
+    if (doubledouble2longdouble(_double, _longdouble) < 0) {
+		PyErr_SetString(LongDoubleError,"Error with conversion.");
+	// do I need to decrement the ref counter??
+	return NULL;
+    }
+    
+    return PyArray_Return((PyArrayObject *)longdouble_obj);
+}
+
+static PyObject *Py_longdouble2doubledouble(PyObject *self, PyObject *args) {
+    PyObject *longdouble_obj = NULL;
+    long double _longdouble;
+    double _double[2];
+    PyObject *double_obj0;
+    PyObject *double_obj1;
+    PyObject *doubledouble_obj;
+
+    if (!PyArg_ParseTuple(args,
+			  (char*)"O",
+			  &longdouble_obj)) {
+	fprintf(stderr,"Failed to parse longdouble object.\n");
+	return NULL;
+    }
+
+    // raise an exception if this isn't a scalar...
+    if (!PyArray_CheckScalar(longdouble_obj)) {
+	PyErr_SetString(LongDoubleError,"Input long double must be a scalar.");
+	return NULL;
+    }
+
+    // cast to long double
+    PyArray_CastScalarToCtype(longdouble_obj, &_longdouble, PyArray_DescrFromType(NPY_LONGDOUBLE));
+
+    // do the conversion
+    if (longdouble2doubledouble(_longdouble,_double) < 0) {
+	PyErr_SetString(LongDoubleError,"Error with conversion.");
+	return NULL;
+    }
+
+    // need to create a tuple here...
+
+    // first need to create objects for the two doubles..
+    double_obj0 = PyFloat_FromDouble(_double[0]);
+    double_obj1 = PyFloat_FromDouble(_double[1]);
+
+    doubledouble_obj = PyTuple_Pack(2, double_obj0, double_obj1);
+
+    return doubledouble_obj;
+}
+
 
 static PyMethodDef LongDouble_type_methods[] = {
     {"string2longdouble", (PyCFunction)Py_string2longdouble, METH_VARARGS, NULL},
     {"longdouble2string", (PyCFunction)Py_longdouble2string, METH_VARARGS, NULL},
+    {"doubledouble2longdouble", (PyCFunction)Py_doubledouble2longdouble, METH_VARARGS, NULL},
+    {"longdouble2doubledouble", (PyCFunction)Py_longdouble2doubledouble, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 

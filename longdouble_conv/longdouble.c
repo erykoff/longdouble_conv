@@ -63,3 +63,16 @@ int longdouble2string(long double _longdouble, char *_string, long ndigit) {
     
     return 0;
 }
+
+int longdouble2doubledouble(long double _longdouble, double *_doubledouble) {
+    _doubledouble[0] = (double)_longdouble;
+    _doubledouble[1] = (double)(_longdouble - (long double) _doubledouble[0]);
+
+    return 0;
+}
+
+int doubledouble2longdouble(double *_doubledouble, long double *_longdouble) {
+    *_longdouble = (long double) _doubledouble[0] + (long double) _doubledouble[1];
+
+    return 0;
+}

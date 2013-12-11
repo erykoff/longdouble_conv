@@ -23,14 +23,22 @@ import numpy as np
 from . import _longdouble_pywrap
 
 def string2longdouble(_string):
-    # need to check if input is string...
-    #if (not isinstance(_string,basestring)) :
-    #    print "Error: argument to string2longdouble must be a string."
-    #    return None
-    
     return _longdouble_pywrap.string2longdouble(_string)
 
 def longdouble2string(_longdouble,n=19):
     return _longdouble_pywrap.longdouble2string(_longdouble,n)
 
+def doubledouble2longdouble(_doubledouble):
+    return _longdouble_pywrap.doubledouble2longdouble(_doubledouble)
+
+def longdouble2doubledouble(_longdouble):
+    return _longdouble_pywrap.longdouble2doubledouble(_longdouble)
+
+def string2doubledouble(_string):
+    _longdouble = string2longdouble(_string)
+    return longdouble2doubledouble(_longdouble)
+
+def doubledouble2string(_doubledouble):
+    _longdouble = doubledouble2longdouble(_doubledouble)
+    return longdouble2string(_longdouble)
 
