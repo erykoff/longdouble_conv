@@ -42,3 +42,14 @@ def doubledouble2string(_doubledouble):
     _longdouble = doubledouble2longdouble(_doubledouble)
     return longdouble2string(_longdouble)
 
+def strings2longdoubles(_strings,array=True):
+    # I had intended to have this in the c code but this is much simpler, if a
+    # bit slower in those cases where you need a list rather than a numpy
+    # array.
+    
+    arr = _longdouble_pywrap.strings2longdoubles(_strings)
+
+    if (not array):
+        return arr.tolist()
+    else :
+        return arr

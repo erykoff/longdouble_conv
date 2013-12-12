@@ -170,12 +170,63 @@ static PyObject *Py_longdouble2doubledouble(PyObject *self, PyObject *args) {
     return doubledouble_obj;
 }
 
+static PyObject *Py_strings2longdoubles(PyObject *self, PyObject *args) {
+    PyObject *strings_obj = NULL;
+    PyObject *longdoubles_obj = NULL;
+    PyObject *string_obj = NULL;
+    long double *_longdoubles;
+    char *_string;
+    Py_ssize_t nstring;
+    int i;
+    npy_intp dims[1];
+
+    if (!PyArg_ParseTuple(args,
+			  (char*)"O",
+			  &strings_obj)) {
+	fprintf(stderr,"Failed to parse strings object.\n");
+	return NULL;
+    }
+
+    // This object needs to be a list of strings...
+    if (!PyList_Check(strings_obj)) {
+	PyErr_SetString(LongDoubleError,"Input to strings2longdoubles must be a list.");
+	return NULL;
+    }
+
+    // how many objects?
+    nstring = PyList_Size(strings_obj);
+
+    // make the output object...
+    dims[0] = nstring;
+    longdoubles_obj = PyArray_ZEROS(1,dims,NPY_LONGDOUBLE,0);
+
+    _longdoubles = (long double *) PyArray_DATA(longdoubles_obj);
+
+    // loop over input list
+    for (i=0;i<nstring;i++) {
+	string_obj = PyList_GetItem(strings_obj, i);
+	if (!PyString_Check(string_obj)) {
+	    PyErr_SetString(LongDoubleError,"Input list must all be strings.");
+	    return NULL;
+	}
+	_string = PyString_AsString(string_obj);
+
+	if (string2longdouble(_string, &_longdoubles[i]) < 0) {
+	    PyErr_SetString(LongDoubleError,"Error with conversion");
+	    return NULL;
+	}
+    }
+    
+    return PyArray_Return((PyArrayObject *)longdoubles_obj);
+}
+
 
 static PyMethodDef LongDouble_type_methods[] = {
     {"string2longdouble", (PyCFunction)Py_string2longdouble, METH_VARARGS, NULL},
     {"longdouble2string", (PyCFunction)Py_longdouble2string, METH_VARARGS, NULL},
     {"doubledouble2longdouble", (PyCFunction)Py_doubledouble2longdouble, METH_VARARGS, NULL},
     {"longdouble2doubledouble", (PyCFunction)Py_longdouble2doubledouble, METH_VARARGS, NULL},
+    {"strings2longdoubles", (PyCFunction)Py_strings2longdoubles, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
